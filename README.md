@@ -12,6 +12,7 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
   - [Delete Note](#delete-note)
   - [List Notes](#list-notes)
   - [Config](#config)
+  - [Config Grant](#config-grant)
 - [Permissions](#permissions)
 - [Database & Data](#database--data)
 - [Setup & Running](#setup--running)
@@ -28,6 +29,7 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
 | `/snote-delete`    | `/sn-delete`| Delete a shared note                        | [Details](#delete-note) |
 | `/snote-list`      | `/sn-list`  | List all shared notes                       | [Details](#list-notes)  |
 | `/snote-config`    | `/sn-config`| Configure bot settings and permissions      | [Details](#config)      |
+| `/config-grant`    |             | Grant a user permission in a channel        | [Details](#config-grant) |
 
 ---
 
@@ -36,17 +38,17 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
 ### Create Note
 - **Command:** `/snote-create` or `/sn-create`
 - **Description:** Opens a modal to create a new shared note. You can specify a title, content (supports markdown), and optional tags.
-- **Permissions:** Only users with the configured role or admin/owner can create notes.
+- **Permissions:** User must have been granted permission for the channel (see `/config-grant`).
 
 ### Edit Note
 - **Command:** `/snote-edit` or `/sn-edit`
 - **Description:** Edit an existing note. Use the autocomplete to select a note by title/ID, or click the Edit button on a note message. Opens a modal for editing.
-- **Permissions:** Only users with the configured role or admin/owner can edit notes.
+- **Permissions:** User must have been granted permission for the channel (see `/config-grant`).
 
 ### Delete Note
 - **Command:** `/snote-delete` or `/sn-delete`
 - **Description:** Delete a note by ID. Use autocomplete to select the note.
-- **Permissions:** Only users with the configured role or admin/owner can delete notes.
+- **Permissions:** User must have been granted permission for the channel (see `/config-grant`).
 
 ### List Notes
 - **Command:** `/snote-list` or `/sn-list`
@@ -63,11 +65,21 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
   - Show current configuration
 - **Permissions:** Only the server owner can configure settings.
 
+### Config Grant
+- **Command:** `/config-grant`
+- **Description:** Grant a user permission to create, edit, or delete posts in a specific channel.
+- **Usage:**
+  - `/config-grant user:@User channel:#channel action:create`
+  - `/config-grant user:@User channel:#channel action:edit`
+  - `/config-grant user:@User channel:#channel action:delete`
+- **Permissions:** Only server owner or admins can grant permissions.
+
 ---
 
 ## Permissions
-- **Owner/Admins:** Always have full access to all commands.
-- **Allowed Roles:** Configurable via `/snote-config` to grant note management to specific roles.
+- **Per-user, per-channel:** Users must be granted permission for each channel using `/config-grant` to create, edit, or delete posts there.
+- **Owner/Admins:** Always have full access to all commands and can grant permissions.
+- **Allowed Roles:** Configurable via `/snote-config` to grant note management to specific roles (for listing, etc).
 - **Button Actions:** Edit buttons on notes also respect permissions.
 
 ---

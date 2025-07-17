@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ModalSubmitInteraction, MessageFlags } from 'discord.js';
 import { Post } from '../database/models/Post';
-import { canManagePosts } from '../utils/permissions';
+import { canUserManagePosts } from '../utils/channelPermissions';
 
 export const data = [
     new SlashCommandBuilder()
@@ -24,13 +24,19 @@ export const data = [
 ];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    // Check permissions
-    if (!await canManagePosts(interaction.member as GuildMember)) {
-        await interaction.reply({ 
-            content: 'You do not have permission to manage shared posts.', 
-            ephemeral: true 
-        });
-        return;
+            // Check per-user, per-channel permission
+            const hasPerm = await canUserManagePosts(
+                interaction.guildId!,
+                interaction.channelId,
+                interaction.user.id,
+                'create'
+            );
+            if (!hasPerm) {
+                await interaction.reply({ 
+                    content: 'You do not have permission to create posts in this channel.', 
+                    ephemeral: true 
+                });
+                return;
     }
 
     // Get the selected channel

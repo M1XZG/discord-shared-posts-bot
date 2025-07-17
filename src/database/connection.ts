@@ -1,12 +1,13 @@
 import { Sequelize } from 'sequelize-typescript';
 import { ServerConfig } from './models/ServerConfig';
-import { Post } from './models/Post';  // Changed from SharedPost to Post
+import { Post } from './models/Post';
+import { ChannelPermission } from './models/ChannelPermission';
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: './data/database.sqlite',
     logging: false,
-    models: [ServerConfig, Post]
+    models: [ServerConfig, Post, ChannelPermission]
 });
 
 export async function initializeDatabase() {

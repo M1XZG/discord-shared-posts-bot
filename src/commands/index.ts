@@ -5,6 +5,7 @@ import * as editPost from './editPost';
 import * as deletePost from './deletePost';
 import * as listPosts from './listPosts';
 import * as configCommand from './config';
+import * as help from './help';
 
 export type AnySlashCommandBuilder = SlashCommandBuilder | SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
 export interface Command {
@@ -28,6 +29,12 @@ for (const mod of allCommandModules) {
             commandsData.push(builder.toJSON());
         }
     }
+}
+
+
+// Register both /snote-help and /sn-help in a type-safe way
+for (const builder of help.data) {
+    commands.set(builder.name, { data: builder, execute: help.execute });
 }
 
 export { commandsData };
