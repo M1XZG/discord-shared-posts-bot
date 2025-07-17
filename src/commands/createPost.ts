@@ -11,7 +11,9 @@ export const data = [
                 .setName('channel')
                 .setDescription('Channel to post the note in')
                 .setRequired(true)
-        ),
+        )
+    // Only require channel; other fields will be collected via modal
+    ,
     new SlashCommandBuilder()
         .setName('sn-create')
         .setDescription('Short: Create a new shared note')
@@ -21,146 +23,127 @@ export const data = [
                 .setDescription('Channel to post the note in')
                 .setRequired(true)
         )
+    // Only require channel; other fields will be collected via modal
+        
 ];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-            // Check per-user, per-channel permission
-            const hasPerm = await canUserManagePosts(
-                interaction.guildId!,
-                interaction.channelId,
-                interaction.user.id,
-                'create'
-            );
-            if (!hasPerm) {
-                await interaction.reply({ 
-                    content: 'You do not have permission to create posts in this channel.', 
-                    ephemeral: true 
-                });
-                return;
+    const channel = interaction.options.getChannel('channel', true);
+    // Check per-user, per-channel permission for the selected channel
+    const hasPerm = await canUserManagePosts(
+        interaction.guildId!,
+        channel.id,
+        interaction.user.id,
+        'create'
+    );
+    if (!hasPerm) {
+        await interaction.reply({
+            content: 'You do not have permission to create posts in that channel.',
+            ephemeral: true
+        });
+        return;
     }
 
-    // Get the selected channel
-    const channel = interaction.options.getChannel('channel', true);
-
-    // Show modal for post creation, encode channelId in customId
+    // Show modal for post creation
     const modal = new ModalBuilder()
         .setCustomId(`createpost-modal:${channel.id}`)
-        .setTitle('Create Shared Post');
-
-    const titleInput = new TextInputBuilder()
-        .setCustomId('createpost-title')
-        .setLabel('Title')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-    const contentInput = new TextInputBuilder()
-        .setCustomId('createpost-content')
-        .setLabel('Content (supports markdown)')
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
-
-    const tagsInput = new TextInputBuilder()
-        .setCustomId('createpost-tags')
-        .setLabel('Tags (comma-separated, optional)')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false);
-
-    modal.addComponents(
-        new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
-        new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput),
-        new ActionRowBuilder<TextInputBuilder>().addComponents(tagsInput)
-    );
-
+        .setTitle('Create Shared Note')
+        .addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+                new TextInputBuilder()
+                    .setCustomId('title')
+                    .setLabel('Title')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true)
+            ),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+                new TextInputBuilder()
+                    .setCustomId('content')
+                    .setLabel('Content (supports markdown)')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true)
+            ),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(
+                new TextInputBuilder()
+                    .setCustomId('tags')
+                    .setLabel('Tags (comma-separated, optional)')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(false)
+            )
+        );
     await interaction.showModal(modal);
 }
 
+// Handler for modal submission
 export async function handleCreatePostModal(interaction: ModalSubmitInteraction) {
-    try {
-        // Extract channelId from customId
-        const match = interaction.customId.match(/^createpost-modal:(\d+)$/);
-        const channelId = match ? match[1] : null;
-        if (!channelId) {
-            await interaction.reply({ content: 'Could not determine channel for post.', ephemeral: true });
-            return;
-        }
+    // Extract channelId from customId
+    const [_, channelId] = interaction.customId.split(':');
+    const title = interaction.fields.getTextInputValue('title');
+    const content = interaction.fields.getTextInputValue('content');
+    const tagsString = interaction.fields.getTextInputValue('tags');
+    const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
-        const title = interaction.fields.getTextInputValue('createpost-title');
-        const content = interaction.fields.getTextInputValue('createpost-content');
-        const tagsString = interaction.fields.getTextInputValue('createpost-tags');
-        const tags = tagsString ? tagsString.split(',').map((tag: string) => tag.trim()).filter(Boolean) : [];
+    // Check per-user, per-channel permission for the selected channel
+    const hasPerm = await canUserManagePosts(
+        interaction.guildId!,
+        channelId,
+        interaction.user.id,
+        'create'
+    );
+    if (!hasPerm) {
+        await interaction.reply({
+            content: 'You do not have permission to create posts in that channel.',
+            ephemeral: true
+        });
+        return;
+    }
 
-        // Create an embed for better formatting
+    // Find the channel
+    const channel = interaction.guild?.channels.cache.get(channelId);
+    if (
+        channel &&
+        typeof channel === 'object' &&
+        'send' in channel &&
+        typeof (channel as any).send === 'function'
+    ) {
         const embed = new EmbedBuilder()
             .setTitle(title)
+            .setDescription(content.length > 4096 ? content.substring(0, 4090) + '...' : content)
             .setColor(0x0099FF)
-            .setAuthor({ 
-                name: interaction.user.username, 
-                iconURL: interaction.user.displayAvatarURL() 
+            .setAuthor({
+                name: interaction.user.username,
+                iconURL: interaction.user.displayAvatarURL()
             })
             .setTimestamp();
-
+        if (tags.length > 0) {
+            embed.setFooter({ text: `Tags: ${tags.join(', ')}` });
+        }
         if (content.length > 4096) {
-            embed.setDescription(content.substring(0, 4090) + '...');
-            embed.addFields({ 
-                name: 'Note', 
-                value: 'Content was truncated. Full content is stored in the database.' 
+            embed.addFields({
+                name: 'Note',
+                value: 'Content was truncated. Full content is stored in the database.'
             });
-        } else {
-            embed.setDescription(content);
         }
-
-        // Fetch the selected channel
-        const channel = await interaction.guild?.channels.fetch(channelId);
-        if (!channel || !channel.isTextBased()) {
-            await interaction.reply({ content: 'Selected channel not found or not text-based.', ephemeral: true });
-            return;
-        }
-
-        // Send the post to the selected channel
-        const sentMsg = await channel.send({ embeds: [embed] });
-
+        const sentMsg = await (channel as any).send({ embeds: [embed] });
         // Store in database (full content, not truncated)
         const post = await Post.create({
             guildId: interaction.guildId!,
-            channelId: channelId,
+            channelId: channel.id,
             messageId: sentMsg.id,
             title: title,
-            content: content, // Full content stored
+            content: content,
             authorId: interaction.user.id,
             authorName: interaction.user.username,
             tags: tags,
             attachments: []
         });
-
-        // Always show post number in the footer, combine with tags if present
-        let footerText = `Post #${post.id}`;
-        if (tags.length > 0) {
-            footerText = `Tags: ${tags.join(', ')} | ${footerText}`;
-        }
-        embed.setFooter({ text: footerText });
-
-        // Add Edit button
-        const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = await import('discord.js');
-        const editButton = new ButtonBuilder()
-            .setCustomId(`editpost-btn-${post.id}`)
-            .setLabel('Edit')
-            .setStyle(ButtonStyle.Primary);
-        const row = new ActionRowBuilder().addComponents(editButton);
-
-        // Edit the message to update the footer and add the button
-        await sentMsg.edit({ embeds: [embed], components: [row.toJSON()] });
-
-        // Confirm to the user in the original channel
-        await interaction.reply({ 
-            content: `Post created successfully in <#${channelId}>! ID: ${post.id}`, 
-            flags: MessageFlags.Ephemeral 
+        await interaction.reply({
+            content: `Post created successfully in <#${channel.id}>! ID: ${post.id}`,
+            ephemeral: true
         });
-    } catch (error) {
-        console.error('Error in handleCreatePostModal:', error);
-        if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'An error occurred while creating the post.', flags: MessageFlags.Ephemeral });
-        } else {
-            await interaction.followUp({ content: 'An error occurred while creating the post.', flags: MessageFlags.Ephemeral });
-        }
+    } else {
+        await interaction.reply({ content: 'Could not post in the selected channel (not a text channel).', ephemeral: true });
     }
 }
+
+// ...existing code...

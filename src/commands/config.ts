@@ -1,8 +1,142 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, PermissionFlagsBits, ChannelType, MessageFlags } from 'discord.js';
 import { ServerConfig } from '../database/models/ServerConfig';
 import { isServerOwner } from '../utils/permissions';
+import { ChannelPermission } from '../database/models/ChannelPermission';
 
 export const data = [
+    // Short alias for config command
+    new SlashCommandBuilder()
+        .setName('sn-config')
+        .setDescription('Short: Configure shared notes bot settings for this server')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('setchannel')
+                .setDescription('Set the default channel for shared posts')
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription('The channel to use for shared posts')
+                        .addChannelTypes(ChannelType.GuildText)
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('createrole')
+                .setDescription('Create a role with permissions to manage posts in the configured channel')
+                .addStringOption(option =>
+                    option
+                        .setName('name')
+                        .setDescription('Name for the new role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user1')
+                        .setDescription('First user to add to the role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user2')
+                        .setDescription('Second user to add to the role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user3')
+                        .setDescription('Third user to add to the role')
+                        .setRequired(false)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('assignrole')
+                .setDescription('Add or remove users from a shared posts role')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to manage')
+                        .setRequired(true)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user')
+                        .setDescription('The user to add/remove')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('action')
+                        .setDescription('Add or remove the user')
+                        .setRequired(true)
+                        .addChoices(
+                            { name: 'Add', value: 'add' },
+                            { name: 'Remove', value: 'remove' }
+                        )
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('addrole')
+                .setDescription('Add a role that can manage shared posts')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to add')
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('removerole')
+                .setDescription('Remove a role from managing shared posts')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to remove')
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('listroles')
+                .setDescription('List all roles that can manage shared posts')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('info')
+                .setDescription('Show current bot configuration')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('grant')
+                .setDescription('Grant a user permission to manage posts in a specific channel')
+                .addUserOption(option =>
+                    option.setName('user').setDescription('User to grant permission').setRequired(true)
+                )
+                .addChannelOption(option =>
+                    option.setName('channel').setDescription('Channel to grant permission in').setRequired(true)
+                )
+                .addStringOption(option =>
+                    option.setName('action').setDescription('Action to grant').setRequired(true)
+                    .addChoices(
+                        { name: 'Create', value: 'create' },
+                        { name: 'Edit', value: 'edit' },
+                        { name: 'Delete', value: 'delete' }
+                    )
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('list-permissions')
+                .setDescription('List which users have which permissions in which channel')
+                .addChannelOption(option =>
+                    option.setName('channel')
+                        .setDescription('Channel to list permissions for (leave blank for all channels)')
+                        .setRequired(false)
+                )
+        ),
     new SlashCommandBuilder()
         .setName('snote-config')
         .setDescription('Configure shared notes bot settings for this server')
@@ -105,113 +239,40 @@ export const data = [
             subcommand
                 .setName('info')
                 .setDescription('Show current bot configuration')
-        ),
-    new SlashCommandBuilder()
-        .setName('sn-config')
-        .setDescription('Short: Configure shared notes bot settings')
+        )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('setchannel')
-                .setDescription('Set the default channel for shared posts')
+                .setName('grant')
+                .setDescription('Grant a user permission to manage posts in a specific channel')
+                .addUserOption(option =>
+                    option.setName('user').setDescription('User to grant permission').setRequired(true)
+                )
                 .addChannelOption(option =>
-                    option
-                        .setName('channel')
-                        .setDescription('The channel to use for shared posts')
-                        .addChannelTypes(ChannelType.GuildText)
-                        .setRequired(true)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('createrole')
-                .setDescription('Create a role with permissions to manage posts in the configured channel')
-                .addStringOption(option =>
-                    option
-                        .setName('name')
-                        .setDescription('Name for the new role')
-                        .setRequired(false)
-                )
-                .addUserOption(option =>
-                    option
-                        .setName('user1')
-                        .setDescription('First user to add to the role')
-                        .setRequired(false)
-                )
-                .addUserOption(option =>
-                    option
-                        .setName('user2')
-                        .setDescription('Second user to add to the role')
-                        .setRequired(false)
-                )
-                .addUserOption(option =>
-                    option
-                        .setName('user3')
-                        .setDescription('Third user to add to the role')
-                        .setRequired(false)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('assignrole')
-                .setDescription('Add or remove users from a shared posts role')
-                .addRoleOption(option =>
-                    option
-                        .setName('role')
-                        .setDescription('The role to manage')
-                        .setRequired(true)
-                )
-                .addUserOption(option =>
-                    option
-                        .setName('user')
-                        .setDescription('The user to add/remove')
-                        .setRequired(true)
+                    option.setName('channel').setDescription('Channel to grant permission in').setRequired(true)
                 )
                 .addStringOption(option =>
-                    option
-                        .setName('action')
-                        .setDescription('Add or remove the user')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Add', value: 'add' },
-                            { name: 'Remove', value: 'remove' }
-                        )
+                    option.setName('action').setDescription('Action to grant').setRequired(true)
+                    .addChoices(
+                        { name: 'Create', value: 'create' },
+                        { name: 'Edit', value: 'edit' },
+                        { name: 'Delete', value: 'delete' }
+                    )
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('addrole')
-                .setDescription('Add a role that can manage shared posts')
-                .addRoleOption(option =>
-                    option
-                        .setName('role')
-                        .setDescription('The role to add')
-                        .setRequired(true)
+                .setName('list-permissions')
+                .setDescription('List which users have which permissions in which channel')
+                .addChannelOption(option =>
+                    option.setName('channel')
+                        .setDescription('Channel to list permissions for (leave blank for all channels)')
+                        .setRequired(false)
                 )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('removerole')
-                .setDescription('Remove a role from managing shared posts')
-                .addRoleOption(option =>
-                    option
-                        .setName('role')
-                        .setDescription('The role to remove')
-                        .setRequired(true)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('listroles')
-                .setDescription('List all roles that can manage shared posts')
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('info')
-                .setDescription('Show current bot configuration')
         )
 ];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+    const subcommand = interaction.options.getSubcommand();
     const member = interaction.member as GuildMember;
     if (
         !interaction.guild ||
@@ -223,8 +284,46 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
         return;
     }
+    if (subcommand === 'list-permissions') {
+        const channel = interaction.options.getChannel('channel');
+        let permissions;
+        if (channel) {
+            permissions = await ChannelPermission.findAll({ where: { guildId: interaction.guildId, channelId: channel.id } });
+        } else {
+            permissions = await ChannelPermission.findAll({ where: { guildId: interaction.guildId } });
+        }
 
-    const subcommand = interaction.options.getSubcommand();
+        if (!permissions.length) {
+            await interaction.reply({ content: 'No permissions found for the selected channel(s).', ephemeral: true });
+            return;
+        }
+
+        // Group by channel
+        const channelMap: Record<string, { userId: string, permission: string }[]> = {};
+        for (const perm of permissions) {
+            if (!channelMap[perm.channelId]) channelMap[perm.channelId] = [];
+            const perms: string[] = [];
+            if (perm.canCreate) perms.push('create');
+            if (perm.canEdit) perms.push('edit');
+            if (perm.canDelete) perms.push('delete');
+            channelMap[perm.channelId].push({ userId: perm.userId, permission: perms.join(', ') || 'none' });
+        }
+
+        const { EmbedBuilder } = await import('discord.js');
+        const embed = new EmbedBuilder()
+            .setTitle('Channel Permissions')
+            .setColor(0x00BFFF);
+
+        for (const [chanId, perms] of Object.entries(channelMap)) {
+            const userPerms = perms.map(p => `<@${p.userId}>: \n- ${p.permission}`).join('\n');
+            embed.addFields({ name: `<#${chanId}>`, value: userPerms });
+        }
+
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+        return;
+    }
+
+
     const guildId = interaction.guildId!;
 
     // Get or create server config
@@ -507,6 +606,34 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 content: `**Bot Configuration**\n\n**Default Channel:** ${channelInfo}\n**Allowed Roles:** ${rolesList}`, 
                 ephemeral: true 
             });
+            break;
+        }
+
+        case 'grant': {
+            if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator) && interaction.guild?.ownerId !== interaction.user.id) {
+                await interaction.reply({ content: 'Only the server owner or an admin can grant permissions.', ephemeral: true });
+                return;
+            }
+            const user = interaction.options.getUser('user', true);
+            const channel = interaction.options.getChannel('channel', true);
+            const action = interaction.options.getString('action', true);
+
+            let perm = await ChannelPermission.findOne({ where: { guildId: interaction.guildId, channelId: channel.id, userId: user.id } });
+            if (!perm) {
+                perm = await ChannelPermission.create({
+                    guildId: interaction.guildId!,
+                    channelId: channel.id,
+                    userId: user.id,
+                    canCreate: false,
+                    canEdit: false,
+                    canDelete: false
+                });
+            }
+            if (action === 'create') perm.canCreate = true;
+            if (action === 'edit') perm.canEdit = true;
+            if (action === 'delete') perm.canDelete = true;
+            await perm.save();
+            await interaction.reply({ content: `Granted ${action} permission to <@${user.id}> in <#${channel.id}>.`, ephemeral: true });
             break;
         }
     }
