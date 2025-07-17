@@ -9,13 +9,11 @@ node_modules/
 dist/
 build/
 
-# Database files
-data/*.db
-data/*.db-journal
-data/*.sqlite
-data/*.sqlite3
 
-# But keep the data directory
+# Exclude the entire data folder (user data, databases, configs)
+data/
+
+# But keep the data directory if .gitkeep is present
 !data/.gitkeep
 
 # IDE and editor files
