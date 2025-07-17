@@ -1,207 +1,110 @@
-# Discord Shared Posts Bot
+# Shared Notes Bot
 
-A Discord bot that solves the long-standing limitation where only the original message author can edit their posts. This bot allows server owners to designate specific users who can create, edit, and manage shared posts collaboratively.
+A collaborative Discord bot for managing shared notes in your server. Designed for admins, mods, and teams to create, edit, and organize important information with robust permissions and a modern UX.
 
-## 🚀 Features
+---
 
-- **Collaborative Post Management**: Multiple authorized users can edit the same posts
-- **Flexible Permissions**: Server owner controls who can manage posts
-- **Role Creation**: Automatically create and configure roles with proper permissions
-- **Channel-Specific**: Configure a dedicated channel for shared posts
-- **Database Storage**: All posts are tracked locally using SQLite
-- **Edit History**: Tracks who created and last edited each post
-- **Simple Commands**: Intuitive slash commands for all operations
+## Table of Contents
+- [Command Summary](#command-summary)
+- [Command Details](#command-details)
+  - [Create Note](#create-note)
+  - [Edit Note](#edit-note)
+  - [Delete Note](#delete-note)
+  - [List Notes](#list-notes)
+  - [Config](#config)
+- [Permissions](#permissions)
+- [Database & Data](#database--data)
+- [Setup & Running](#setup--running)
+- [Contributing](#contributing)
 
-## 📋 Prerequisites
+---
 
-- Node.js (version 16.9.0 or higher)
-- npm or yarn
-- A Discord Bot Token ([Create one here](https://discord.com/developers/applications))
-- A Discord server where you have owner permissions
+## Command Summary
 
-## 🛠️ Installation
+| Command            | Short Alias | Description                                 | Details Link         |
+|--------------------|-------------|---------------------------------------------|---------------------|
+| `/snote-create`    | `/sn-create`| Create a new shared note                    | [Details](#create-note) |
+| `/snote-edit`      | `/sn-edit`  | Edit an existing shared note                | [Details](#edit-note)   |
+| `/snote-delete`    | `/sn-delete`| Delete a shared note                        | [Details](#delete-note) |
+| `/snote-list`      | `/sn-list`  | List all shared notes                       | [Details](#list-notes)  |
+| `/snote-config`    | `/sn-config`| Configure bot settings and permissions      | [Details](#config)      |
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/discord-shared-posts-bot.git
+---
+
+## Command Details
+
+### Create Note
+- **Command:** `/snote-create` or `/sn-create`
+- **Description:** Opens a modal to create a new shared note. You can specify a title, content (supports markdown), and optional tags.
+- **Permissions:** Only users with the configured role or admin/owner can create notes.
+
+### Edit Note
+- **Command:** `/snote-edit` or `/sn-edit`
+- **Description:** Edit an existing note. Use the autocomplete to select a note by title/ID, or click the Edit button on a note message. Opens a modal for editing.
+- **Permissions:** Only users with the configured role or admin/owner can edit notes.
+
+### Delete Note
+- **Command:** `/snote-delete` or `/sn-delete`
+- **Description:** Delete a note by ID. Use autocomplete to select the note.
+- **Permissions:** Only users with the configured role or admin/owner can delete notes.
+
+### List Notes
+- **Command:** `/snote-list` or `/sn-list`
+- **Description:** List recent shared notes in the server, optionally filtered by channel.
+- **Permissions:** Only users with the configured role or admin/owner can view notes.
+
+### Config
+- **Command:** `/snote-config` or `/sn-config`
+- **Description:** Configure bot settings, including:
+  - Set the default channel for notes
+  - Create/manage roles for note permissions
+  - Assign/remove users to/from note roles
+  - List allowed roles
+  - Show current configuration
+- **Permissions:** Only the server owner can configure settings.
+
+---
+
+## Permissions
+- **Owner/Admins:** Always have full access to all commands.
+- **Allowed Roles:** Configurable via `/snote-config` to grant note management to specific roles.
+- **Button Actions:** Edit buttons on notes also respect permissions.
+
+---
+
+## Database & Data
+- All user data and configuration is stored in `data/database.sqlite` (excluded from git).
+- The `data/` folder is used for all persistent data.
+
+---
+
+## Setup & Running
+1. **Clone the repo:**
+   ```sh
+   git clone https://github.com/M1XZG/discord-shared-posts-bot.git
    cd discord-shared-posts-bot
    ```
-
-2. Install dependencies:
-   ```bash
+2. **Install dependencies:**
+   ```sh
    npm install
    ```
-
-3. Create a `.env` file based on `.env.example`:
-   ```bash
-   cp .env.example .env
+3. **Configure environment:**
+   - Copy `.env.example` to `.env` and fill in your Discord bot token and IDs.
+4. **Run the bot (development):**
+   ```sh
+   npm run dev
    ```
-
-4. Edit the `.env` file with your bot credentials:
-   ```
-   DISCORD_TOKEN=your_bot_token_here
-   CLIENT_ID=your_bot_client_id_here
-   DEV_GUILD_ID=your_test_server_id_here  # Optional: for development
-   ```
-
-5. Build the TypeScript code:
-   ```bash
+5. **Run the bot (production):**
+   ```sh
    npm run build
+   npm start
    ```
 
-## 🤖 Running the Bot
+---
 
-### Production:
-```bash
-npm start
-```
+## Contributing
+Pull requests and suggestions are welcome! Please open an issue or PR for improvements, bug fixes, or new features.
 
-### Development (with auto-reload):
-```bash
-npm run dev
-```
+---
 
-## ⚙️ Initial Setup (Server Owner Only)
-
-1. **Invite the bot** to your server with these permissions:
-   - Send Messages
-   - Manage Messages
-   - Manage Roles
-   - Use Slash Commands
-   - Read Message History
-   - Embed Links
-
-2. **Configure the shared posts channel**:
-   ```
-   /config setchannel #shared-notes
-   ```
-
-3. **Create a role for post managers** (optional - adds up to 3 users):
-   ```
-   /config createrole name:"Note Editors" user1:@john user2:@jane user3:@alex
-   ```
-
-4. **Add more users to the role later**:
-   ```
-   /config assignrole role:@Note-Editors user:@newuser action:Add
-   ```
-
-## 📝 Commands
-
-### Configuration Commands (Server Owner Only)
-
-| Command | Description |
-|---------|-------------|
-| `/config setchannel <channel>` | Set the default channel for shared posts |
-| `/config createrole [name] [user1] [user2] [user3]` | Create a role with permissions and optionally assign users |
-| `/config assignrole <role> <user> <action>` | Add or remove users from a configured role |
-| `/config addrole <role>` | Add an existing role to manage shared posts |
-| `/config removerole <role>` | Remove a role from managing shared posts |
-| `/config listroles` | List all roles that can manage shared posts |
-| `/config info` | Show current bot configuration |
-
-### Post Management Commands (Authorized Users)
-
-| Command | Description |
-|---------|-------------|
-| `/createpost <content>` | Create a new shared post |
-| `/editpost <id> <content>` | Edit an existing shared post |
-| `/deletepost <id>` | Delete a shared post |
-| `/listposts [channel]` | List all shared posts (optionally filtered by channel) |
-
-## 🔐 Permissions System
-
-### Who can configure the bot:
-- **Server Owner only** - Has exclusive access to all `/config` commands
-
-### Who can manage shared posts:
-- Server Owner (always)
-- Users with Administrator permission (always)
-- Users with roles configured via `/config addrole` or `/config createrole`
-
-## 💡 Usage Example
-
-1. **Server owner** sets up the bot:
-   ```
-   /config setchannel #community-notes
-   /config createrole name:"Community Editors" user1:@alice user2:@bob
-   ```
-
-2. **Authorized users** create shared posts:
-   ```
-   /createpost content:"Meeting notes: We discussed the upcoming event..."
-   ```
-
-3. **Any authorized user** can edit:
-   ```
-   /editpost id:1 content:"Meeting notes: We discussed the upcoming event on July 20th..."
-   ```
-
-4. **View all posts**:
-   ```
-   /listposts
-   ```
-
-## 📁 Project Structure
-
-```
-discord-shared-posts-bot/
-├── src/
-│   ├── bot.ts                 # Bot initialization
-│   ├── index.ts               # Entry point
-│   ├── commands/              # Command handlers
-│   │   ├── config.ts          # Configuration commands
-│   │   ├── createPost.ts      # Create posts
-│   │   ├── editPost.ts        # Edit posts
-│   │   ├── deletePost.ts      # Delete posts
-│   │   └── listPosts.ts       # List posts
-│   ├── database/              # Database setup
-│   │   ├── connection.ts      # Database connection
-│   │   └── models/            # Data models
-│   │       ├── Post.ts        # Post model
-│   │       └── ServerConfig.ts # Server configuration model
-│   ├── events/                # Discord event handlers
-│   │   ├── ready.ts           # Bot ready event
-│   │   └── interactionCreate.ts # Command interactions
-│   └── utils/                 # Utility functions
-│       ├── permissions.ts     # Permission checking
-│       └── registerCommands.ts # Command registration
-├── data/                      # SQLite database storage (created automatically)
-├── .env.example               # Environment variables template
-├── .gitignore                 # Git ignore file
-├── package.json               # Project dependencies
-├── tsconfig.json              # TypeScript configuration
-└── README.md                  # This file
-```
-
-## 🔧 Troubleshooting
-
-### Bot not responding to commands?
-- Ensure the bot has all required permissions
-- Check that you've set up a channel with `/config setchannel`
-- Verify the bot is online and check console for errors
-- Commands may take up to an hour to register globally (use `DEV_GUILD_ID` for instant updates)
-
-### Permission denied errors?
-- Make sure you're the server owner when using `/config` commands
-- Check that your role is added with `/config addrole` or created with `/config createrole`
-- Verify the bot has "Manage Roles" permission to assign roles
-
-### Database errors?
-- Ensure the `data/` directory exists and is writable
-- Check console for specific error messages
-- The database file (`data/bot.db`) is created automatically on first run
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [discord.js](https://discord.js.org/)
-- Uses [Sequelize](https://sequelize.org/) ORM with SQLite
-- Written in TypeScript
+*Made with ❤️ for collaborative Discord communities.*

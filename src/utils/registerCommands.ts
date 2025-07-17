@@ -17,8 +17,11 @@ export async function registerCommands() {
     for (const file of commandFiles) {
         const command = require(join(__dirname, '../commands', file));
         if ('data' in command && 'execute' in command) {
-            commands.set(command.data.name, command);
-            commandsData.push(command.data.toJSON());
+            const datas = Array.isArray(command.data) ? command.data : [command.data];
+            for (const builder of datas) {
+                commands.set(builder.name, command);
+                commandsData.push(builder.toJSON());
+            }
         } else {
             console.log(`[WARNING] The command at ${file} is missing a required "data" or "execute" property.`);
         }

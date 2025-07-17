@@ -2,15 +2,26 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, EmbedBui
 import { Post } from '../database/models/Post';
 import { canManagePosts } from '../utils/permissions';
 
-export const data = new SlashCommandBuilder()
-    .setName('listposts')
-    .setDescription('List all shared posts')
-    .addChannelOption(option =>
-        option
-            .setName('channel')
-            .setDescription('Filter by specific channel')
-            .setRequired(false)
-    );
+export const data = [
+    new SlashCommandBuilder()
+        .setName('snote-list')
+        .setDescription('List all shared notes')
+        .addChannelOption(option =>
+            option
+                .setName('channel')
+                .setDescription('Filter by specific channel')
+                .setRequired(false)
+        ),
+    new SlashCommandBuilder()
+        .setName('sn-list')
+        .setDescription('Short: List all shared notes')
+        .addChannelOption(option =>
+            option
+                .setName('channel')
+                .setDescription('Filter by specific channel')
+                .setRequired(false)
+        )
+];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     // Check permissions
