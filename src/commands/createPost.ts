@@ -1,14 +1,26 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ModalSubmitInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ModalSubmitInteraction, MessageFlags } from 'discord.js';
 import { Post } from '../database/models/Post';
 import { canManagePosts } from '../utils/permissions';
 
 export const data = [
     new SlashCommandBuilder()
         .setName('snote-create')
-        .setDescription('Create a new shared note'),
+        .setDescription('Create a new shared note')
+        .addChannelOption(option =>
+            option
+                .setName('channel')
+                .setDescription('Channel to post the note in')
+                .setRequired(true)
+        ),
     new SlashCommandBuilder()
         .setName('sn-create')
         .setDescription('Short: Create a new shared note')
+        .addChannelOption(option =>
+            option
+                .setName('channel')
+                .setDescription('Channel to post the note in')
+                .setRequired(true)
+        )
 ];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -21,9 +33,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
     }
 
-    // Show modal for post creation
+    // Get the selected channel
+    const channel = interaction.options.getChannel('channel', true);
+
+    // Show modal for post creation, encode channelId in customId
     const modal = new ModalBuilder()
-        .setCustomId('createpost-modal')
+        .setCustomId(`createpost-modal:${channel.id}`)
         .setTitle('Create Shared Post');
 
     const titleInput = new TextInputBuilder()
@@ -55,12 +70,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 export async function handleCreatePostModal(interaction: ModalSubmitInteraction) {
     try {
-        console.log('Modal interaction:', {
-            guildId: interaction.guildId,
-            channelId: interaction.channel?.id,
-            user: interaction.user.id,
-            fields: Array.from(interaction.fields.fields.values()).map((f: any) => ({ id: f.customId, value: f.value }))
-        });
+        // Extract channelId from customId
+        const match = interaction.customId.match(/^createpost-modal:(\d+)$/);
+        const channelId = match ? match[1] : null;
+        if (!channelId) {
+            await interaction.reply({ content: 'Could not determine channel for post.', ephemeral: true });
+            return;
+        }
 
         const title = interaction.fields.getTextInputValue('createpost-title');
         const content = interaction.fields.getTextInputValue('createpost-content');
@@ -87,20 +103,21 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
             embed.setDescription(content);
         }
 
-        // Use channel?.id for safety
-        const channelId = interaction.channel?.id || null;
-        if (!channelId) {
-            await interaction.reply({ content: 'Could not determine channel for post.', ephemeral: true });
+        // Fetch the selected channel
+        const channel = await interaction.guild?.channels.fetch(channelId);
+        if (!channel || !channel.isTextBased()) {
+            await interaction.reply({ content: 'Selected channel not found or not text-based.', ephemeral: true });
             return;
         }
 
+        // Send the post to the selected channel
+        const sentMsg = await channel.send({ embeds: [embed] });
+
         // Store in database (full content, not truncated)
-        // First, send a placeholder message to get the message ID
-        const tempMsg = await interaction.reply({ embeds: [embed], fetchReply: true });
         const post = await Post.create({
             guildId: interaction.guildId!,
             channelId: channelId,
-            messageId: tempMsg.id,
+            messageId: sentMsg.id,
             title: title,
             content: content, // Full content stored
             authorId: interaction.user.id,
@@ -125,19 +142,19 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
         const row = new ActionRowBuilder().addComponents(editButton);
 
         // Edit the message to update the footer and add the button
-    await tempMsg.edit({ embeds: [embed], components: [row.toJSON()] });
+        await sentMsg.edit({ embeds: [embed], components: [row.toJSON()] });
 
-        // Add confirmation
-        await interaction.followUp({ 
-            content: `Post created successfully! ID: ${post.id}`, 
-            ephemeral: true 
+        // Confirm to the user in the original channel
+        await interaction.reply({ 
+            content: `Post created successfully in <#${channelId}>! ID: ${post.id}`, 
+            flags: MessageFlags.Ephemeral 
         });
     } catch (error) {
         console.error('Error in handleCreatePostModal:', error);
         if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'An error occurred while creating the post.', ephemeral: true });
+            await interaction.reply({ content: 'An error occurred while creating the post.', flags: MessageFlags.Ephemeral });
         } else {
-            await interaction.followUp({ content: 'An error occurred while creating the post.', ephemeral: true });
+            await interaction.followUp({ content: 'An error occurred while creating the post.', flags: MessageFlags.Ephemeral });
         }
     }
 }

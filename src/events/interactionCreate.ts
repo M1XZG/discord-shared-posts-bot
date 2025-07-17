@@ -7,8 +7,8 @@ import { canManagePosts } from '../utils/permissions';
 // This function should be called from your main bot file, passing the client and commands collection
 export async function handleInteractionCreate(interaction: Interaction, commands: Collection<string, any>) {
     if (interaction.isAutocomplete && interaction.isAutocomplete()) {
-        // Autocomplete for /editpost post ID
-        if (interaction.commandName === 'editpost' && interaction.options.getFocused(true).name === 'id') {
+        // Autocomplete for /editpost and /deletepost post ID
+        if ((interaction.commandName === 'editpost' || interaction.commandName === 'snote-edit' || interaction.commandName === 'sn-edit' || interaction.commandName === 'snote-delete' || interaction.commandName === 'sn-delete') && interaction.options.getFocused(true).name === 'id') {
             const { Post } = await import('../database/models/Post');
             const posts = await Post.findAll({
                 where: { guildId: interaction.guildId },
@@ -82,8 +82,8 @@ export async function handleInteractionCreate(interaction: Interaction, commands
             await interaction.showModal(modal);
         }
     } else if (interaction.isModalSubmit()) {
-        // Handle create post modal
-        if (interaction.customId === 'createpost-modal') {
+        // Handle create post modal (now supports customId with channelId)
+        if (interaction.customId.startsWith('createpost-modal:')) {
             await handleCreatePostModal(interaction as ModalSubmitInteraction);
         } else if (interaction.customId.startsWith('editpost-modal-')) {
             await handleEditPostModal(interaction as ModalSubmitInteraction);

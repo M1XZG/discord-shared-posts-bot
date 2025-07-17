@@ -212,10 +212,13 @@ export const data = [
 ];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    // Check if user is server owner
-    if (!interaction.guild || !isServerOwner(interaction.member as GuildMember)) {
+    const member = interaction.member as GuildMember;
+    if (
+        !interaction.guild ||
+        (!isServerOwner(member) && !member.permissions.has(PermissionFlagsBits.Administrator))
+    ) {
         await interaction.reply({ 
-            content: 'Only the server owner can configure bot settings.', 
+            content: 'Only the server owner or a member with Administrator permissions can configure bot settings.', 
             flags: MessageFlags.Ephemeral 
         });
         return;

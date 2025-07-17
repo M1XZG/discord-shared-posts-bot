@@ -11,6 +11,7 @@ export const data = [
                 .setName('id')
                 .setDescription('The ID of the note to delete')
                 .setRequired(true)
+                .setAutocomplete(true)
         ),
     new SlashCommandBuilder()
         .setName('sn-delete')
@@ -20,6 +21,7 @@ export const data = [
                 .setName('id')
                 .setDescription('The ID of the note to delete')
                 .setRequired(true)
+                .setAutocomplete(true)
         )
 ];
 
