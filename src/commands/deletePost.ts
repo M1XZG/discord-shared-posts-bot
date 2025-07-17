@@ -2,15 +2,26 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember } from 'd
 import { Post } from '../database/models/Post';
 import { canManagePosts } from '../utils/permissions';
 
-export const data = new SlashCommandBuilder()
-    .setName('deletepost')
-    .setDescription('Delete a shared post')
-    .addStringOption(option =>
-        option
-            .setName('id')
-            .setDescription('The ID of the post to delete')
-            .setRequired(true)
-    );
+export const data = [
+    new SlashCommandBuilder()
+        .setName('snote-delete')
+        .setDescription('Delete a shared note')
+        .addStringOption(option =>
+            option
+                .setName('id')
+                .setDescription('The ID of the note to delete')
+                .setRequired(true)
+        ),
+    new SlashCommandBuilder()
+        .setName('sn-delete')
+        .setDescription('Short: Delete a shared note')
+        .addStringOption(option =>
+            option
+                .setName('id')
+                .setDescription('The ID of the note to delete')
+                .setRequired(true)
+        )
+];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     // Check permissions

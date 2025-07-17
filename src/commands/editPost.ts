@@ -2,16 +2,28 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBui
 import { Post } from '../database/models/Post';
 import { canManagePosts } from '../utils/permissions';
 
-export const data = new SlashCommandBuilder()
-    .setName('editpost')
-    .setDescription('Edit an existing shared post')
-    .addStringOption(option =>
-        option
-            .setName('id')
-            .setDescription('The ID of the post to edit')
-            .setRequired(true)
-            .setAutocomplete(true)
-    );
+export const data = [
+    new SlashCommandBuilder()
+        .setName('snote-edit')
+        .setDescription('Edit an existing shared note')
+        .addStringOption(option =>
+            option
+                .setName('id')
+                .setDescription('The ID of the note to edit')
+                .setRequired(true)
+                .setAutocomplete(true)
+        ),
+    new SlashCommandBuilder()
+        .setName('sn-edit')
+        .setDescription('Short: Edit an existing shared note')
+        .addStringOption(option =>
+            option
+                .setName('id')
+                .setDescription('The ID of the note to edit')
+                .setRequired(true)
+                .setAutocomplete(true)
+        )
+];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     // Check permissions

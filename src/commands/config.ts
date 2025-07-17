@@ -2,109 +2,214 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, Permissi
 import { ServerConfig } from '../database/models/ServerConfig';
 import { isServerOwner } from '../utils/permissions';
 
-export const data = new SlashCommandBuilder()
-    .setName('config')
-    .setDescription('Configure bot settings for this server')
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('setchannel')
-            .setDescription('Set the default channel for shared posts')
-            .addChannelOption(option =>
-                option
-                    .setName('channel')
-                    .setDescription('The channel to use for shared posts')
-                    .addChannelTypes(ChannelType.GuildText)
-                    .setRequired(true)
-            )
-    )
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('createrole')
-            .setDescription('Create a role with permissions to manage posts in the configured channel')
-            .addStringOption(option =>
-                option
-                    .setName('name')
-                    .setDescription('Name for the new role')
-                    .setRequired(false)
-            )
-            .addUserOption(option =>
-                option
-                    .setName('user1')
-                    .setDescription('First user to add to the role')
-                    .setRequired(false)
-            )
-            .addUserOption(option =>
-                option
-                    .setName('user2')
-                    .setDescription('Second user to add to the role')
-                    .setRequired(false)
-            )
-            .addUserOption(option =>
-                option
-                    .setName('user3')
-                    .setDescription('Third user to add to the role')
-                    .setRequired(false)
-            )
-    )
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('assignrole')
-            .setDescription('Add or remove users from a shared posts role')
-            .addRoleOption(option =>
-                option
-                    .setName('role')
-                    .setDescription('The role to manage')
-                    .setRequired(true)
-            )
-            .addUserOption(option =>
-                option
-                    .setName('user')
-                    .setDescription('The user to add/remove')
-                    .setRequired(true)
-            )
-            .addStringOption(option =>
-                option
-                    .setName('action')
-                    .setDescription('Add or remove the user')
-                    .setRequired(true)
-                    .addChoices(
-                        { name: 'Add', value: 'add' },
-                        { name: 'Remove', value: 'remove' }
-                    )
-            )
-    )
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('addrole')
-            .setDescription('Add a role that can manage shared posts')
-            .addRoleOption(option =>
-                option
-                    .setName('role')
-                    .setDescription('The role to add')
-                    .setRequired(true)
-            )
-    )
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('removerole')
-            .setDescription('Remove a role from managing shared posts')
-            .addRoleOption(option =>
-                option
-                    .setName('role')
-                    .setDescription('The role to remove')
-                    .setRequired(true)
-            )
-    )
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('listroles')
-            .setDescription('List all roles that can manage shared posts')
-    )
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName('info')
-            .setDescription('Show current bot configuration')
-    );
+export const data = [
+    new SlashCommandBuilder()
+        .setName('snote-config')
+        .setDescription('Configure shared notes bot settings for this server')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('setchannel')
+                .setDescription('Set the default channel for shared posts')
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription('The channel to use for shared posts')
+                        .addChannelTypes(ChannelType.GuildText)
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('createrole')
+                .setDescription('Create a role with permissions to manage posts in the configured channel')
+                .addStringOption(option =>
+                    option
+                        .setName('name')
+                        .setDescription('Name for the new role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user1')
+                        .setDescription('First user to add to the role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user2')
+                        .setDescription('Second user to add to the role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user3')
+                        .setDescription('Third user to add to the role')
+                        .setRequired(false)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('assignrole')
+                .setDescription('Add or remove users from a shared posts role')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to manage')
+                        .setRequired(true)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user')
+                        .setDescription('The user to add/remove')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('action')
+                        .setDescription('Add or remove the user')
+                        .setRequired(true)
+                        .addChoices(
+                            { name: 'Add', value: 'add' },
+                            { name: 'Remove', value: 'remove' }
+                        )
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('addrole')
+                .setDescription('Add a role that can manage shared posts')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to add')
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('removerole')
+                .setDescription('Remove a role from managing shared posts')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to remove')
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('listroles')
+                .setDescription('List all roles that can manage shared posts')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('info')
+                .setDescription('Show current bot configuration')
+        ),
+    new SlashCommandBuilder()
+        .setName('sn-config')
+        .setDescription('Short: Configure shared notes bot settings')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('setchannel')
+                .setDescription('Set the default channel for shared posts')
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription('The channel to use for shared posts')
+                        .addChannelTypes(ChannelType.GuildText)
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('createrole')
+                .setDescription('Create a role with permissions to manage posts in the configured channel')
+                .addStringOption(option =>
+                    option
+                        .setName('name')
+                        .setDescription('Name for the new role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user1')
+                        .setDescription('First user to add to the role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user2')
+                        .setDescription('Second user to add to the role')
+                        .setRequired(false)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user3')
+                        .setDescription('Third user to add to the role')
+                        .setRequired(false)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('assignrole')
+                .setDescription('Add or remove users from a shared posts role')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to manage')
+                        .setRequired(true)
+                )
+                .addUserOption(option =>
+                    option
+                        .setName('user')
+                        .setDescription('The user to add/remove')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('action')
+                        .setDescription('Add or remove the user')
+                        .setRequired(true)
+                        .addChoices(
+                            { name: 'Add', value: 'add' },
+                            { name: 'Remove', value: 'remove' }
+                        )
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('addrole')
+                .setDescription('Add a role that can manage shared posts')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to add')
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('removerole')
+                .setDescription('Remove a role from managing shared posts')
+                .addRoleOption(option =>
+                    option
+                        .setName('role')
+                        .setDescription('The role to remove')
+                        .setRequired(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('listroles')
+                .setDescription('List all roles that can manage shared posts')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('info')
+                .setDescription('Show current bot configuration')
+        )
+];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     // Check if user is server owner

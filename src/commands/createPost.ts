@@ -2,9 +2,14 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBui
 import { Post } from '../database/models/Post';
 import { canManagePosts } from '../utils/permissions';
 
-export const data = new SlashCommandBuilder()
-    .setName('createpost')
-    .setDescription('Create a new shared post');
+export const data = [
+    new SlashCommandBuilder()
+        .setName('snote-create')
+        .setDescription('Create a new shared note'),
+    new SlashCommandBuilder()
+        .setName('sn-create')
+        .setDescription('Short: Create a new shared note')
+];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     // Check permissions
