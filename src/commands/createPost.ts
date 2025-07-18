@@ -2,6 +2,8 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ModalSu
 import { Post } from '../database/models/Post';
 import { canUserManagePosts } from '../utils/channelPermissions';
 import { buildPostModal } from '../utils/modalUtils';
+import { ButtonBuilder, ActionRowBuilder } from 'discord.js';
+import { ButtonStyle } from 'discord.js';
 
 export const data = [
     new SlashCommandBuilder()
@@ -153,7 +155,9 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
             });
         }
         // Store in database (full content, not truncated)
+        // Send initial message with embed only
         const sentMsg = await (channel as any).send({ embeds: [embed] });
+        // Store in database
         const post = await Post.create({
             guildId: interaction.guildId!,
             channelId: channel.id,
@@ -164,6 +168,24 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
             authorName: interaction.user.username,
             tags: tags,
             attachments: []
+        });
+    // Footer and button logic moved below, just before editing message
+        // Add footer and Edit button, then update message
+        const createdAt = post.createdAt instanceof Date ? post.createdAt : new Date();
+        let footerText = `Post #${post.id} | ${createdAt.toLocaleString()}`;
+        if (tags.length > 0) {
+            footerText = `Tags: ${tags.join(', ')} | ${footerText}`;
+        }
+        embed.setFooter({ text: footerText });
+        const editButton = new ButtonBuilder()
+            .setCustomId(`editpost:${interaction.user.id}:${title}:${post.id}`)
+            .setLabel('Edit')
+            .setStyle(ButtonStyle.Primary);
+        const row = new ActionRowBuilder().addComponents(editButton);
+        await sentMsg.edit({ embeds: [embed], components: [row] });
+        await interaction.reply({
+            content: `Post created successfully in <#${channel.id}>! ID: ${post.id}`,
+            ephemeral: true
         });
         // Add footer with post number and creation date/time
         const createdAt = post.createdAt instanceof Date ? post.createdAt : new Date();
