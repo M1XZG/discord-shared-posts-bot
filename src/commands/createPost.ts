@@ -36,9 +36,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         member = await interaction.guild.members.fetch(interaction.user.id);
     }
     let hasPerm = false;
+    let isOwner = false;
+    let isAdmin = false;
     if (member) {
-        const isOwner = member.guild.ownerId === member.id;
-        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+        isOwner = member.guild.ownerId === member.id;
+        isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
         if (isOwner || isAdmin) {
             hasPerm = true;
         }
@@ -51,6 +53,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             'create'
         );
     }
+    // Debug logging
+    console.log(`[DEBUG] createPost: user=${interaction.user.id} isOwner=${isOwner} isAdmin=${isAdmin} hasPerm=${hasPerm}`);
     // Check if bot has permission to send messages in the target channel
     const botMember = interaction.guild?.members.me;
     let botCanSend = false;
@@ -67,14 +71,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (!botCanSend) {
         await interaction.reply({
             content: 'Bot does not have permission to send messages in the selected channel. Please update channel permissions.',
-            ephemeral: true
+            flags: 1 << 6 // EPHEMERAL
         });
         return;
     }
     if (!hasPerm) {
         await interaction.reply({
-            content: 'You do not have permission to create posts in that channel.',
-            ephemeral: true
+            content: `You do not have permission to create posts in that channel. [DEBUG: isOwner=${isOwner} isAdmin=${isAdmin} hasPerm=${hasPerm}]`,
+            flags: 1 << 6 // EPHEMERAL
         });
         return;
     }
