@@ -1,6 +1,7 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ModalSubmitInteraction, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ModalSubmitInteraction } from 'discord.js';
 import { Post } from '../database/models/Post';
 import { canUserManagePosts } from '../utils/channelPermissions';
+import { buildPostModal } from '../utils/modalUtils';
 
 export const data = [
     new SlashCommandBuilder()
@@ -29,13 +30,24 @@ export const data = [
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     const channel = interaction.options.getChannel('channel', true);
-    // Check per-user, per-channel permission for the selected channel
-    const hasPerm = await canUserManagePosts(
-        interaction.guildId!,
-        channel.id,
-        interaction.user.id,
-        'create'
-    );
+    // Allow server owner and admins to always create posts
+    const member = interaction.guild?.members.cache.get(interaction.user.id);
+    let hasPerm = false;
+    if (member) {
+        const isOwner = member.guild.ownerId === member.id;
+        const isAdmin = member.permissions.has('Administrator');
+        if (isOwner || isAdmin) {
+            hasPerm = true;
+        }
+    }
+    if (!hasPerm) {
+        hasPerm = await canUserManagePosts(
+            interaction.guildId!,
+            channel.id,
+            interaction.user.id,
+            'create'
+        );
+    }
     if (!hasPerm) {
         await interaction.reply({
             content: 'You do not have permission to create posts in that channel.',
@@ -45,32 +57,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     // Show modal for post creation
-    const modal = new ModalBuilder()
-        .setCustomId(`createpost-modal:${channel.id}`)
-        .setTitle('Create Shared Note')
-        .addComponents(
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                    .setCustomId('title')
-                    .setLabel('Title')
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true)
-            ),
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                    .setCustomId('content')
-                    .setLabel('Content (supports markdown)')
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setRequired(true)
-            ),
-            new ActionRowBuilder<TextInputBuilder>().addComponents(
-                new TextInputBuilder()
-                    .setCustomId('tags')
-                    .setLabel('Tags (comma-separated, optional)')
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(false)
-            )
-        );
+    const modal = buildPostModal({
+        customId: `createpost-modal:${channel.id}`,
+        title: 'Create Shared Note'
+    });
     await interaction.showModal(modal);
 }
 
@@ -83,13 +73,24 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
     const tagsString = interaction.fields.getTextInputValue('tags');
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
-    // Check per-user, per-channel permission for the selected channel
-    const hasPerm = await canUserManagePosts(
-        interaction.guildId!,
-        channelId,
-        interaction.user.id,
-        'create'
-    );
+    // Allow server owner and admins to always create posts
+    const member = interaction.guild?.members.cache.get(interaction.user.id);
+    let hasPerm = false;
+    if (member) {
+        const isOwner = member.guild.ownerId === member.id;
+        const isAdmin = member.permissions.has('Administrator');
+        if (isOwner || isAdmin) {
+            hasPerm = true;
+        }
+    }
+    if (!hasPerm) {
+        hasPerm = await canUserManagePosts(
+            interaction.guildId!,
+            channelId,
+            interaction.user.id,
+            'create'
+        );
+    }
     if (!hasPerm) {
         await interaction.reply({
             content: 'You do not have permission to create posts in that channel.',
@@ -115,17 +116,14 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
                 iconURL: interaction.user.displayAvatarURL()
             })
             .setTimestamp();
-        if (tags.length > 0) {
-            embed.setFooter({ text: `Tags: ${tags.join(', ')}` });
-        }
         if (content.length > 4096) {
             embed.addFields({
                 name: 'Note',
                 value: 'Content was truncated. Full content is stored in the database.'
             });
         }
-        const sentMsg = await (channel as any).send({ embeds: [embed] });
         // Store in database (full content, not truncated)
+        const sentMsg = await (channel as any).send({ embeds: [embed] });
         const post = await Post.create({
             guildId: interaction.guildId!,
             channelId: channel.id,
@@ -137,6 +135,15 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
             tags: tags,
             attachments: []
         });
+        // Add footer with post number and creation date/time
+        const createdAt = post.createdAt instanceof Date ? post.createdAt : new Date();
+        let footerText = `Post #${post.id} | ${createdAt.toLocaleString()}`;
+        if (tags.length > 0) {
+            footerText = `Tags: ${tags.join(', ')} | ${footerText}`;
+        }
+        embed.setFooter({ text: footerText });
+        // Edit the message to update the footer
+        await sentMsg.edit({ embeds: [embed] });
         await interaction.reply({
             content: `Post created successfully in <#${channel.id}>! ID: ${post.id}`,
             ephemeral: true

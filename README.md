@@ -1,9 +1,22 @@
+
 # Shared Notes Bot
 
 A collaborative Discord bot for managing shared notes in your server. Designed for admins, mods, and teams to create, edit, and organize important information with robust permissions and a modern UX.
 
 ---
 
+## 🚦 Permission System Overview
+
+**This bot uses a per-user, per-channel permission system for creating, editing, and deleting notes.**
+
+- Users must be explicitly granted permission for each channel using `/config-grant`.
+- Server owners and admins always have full access and can grant permissions.
+- Roles can be configured for listing and config commands via `/snote-config`.
+- Edit buttons on notes also respect permissions.
+
+See below for details on each command and how permissions work.
+
+---
 
 ## Table of Contents
 - [Command Summary](#command-summary)
@@ -77,6 +90,7 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
 - **Permissions:** Only server owner or admins can grant permissions.
 
 ---
+
 
 ## Permissions
 - **Per-user, per-channel:** Users must be granted permission for each channel using `/config-grant` to create, edit, or delete posts there.
