@@ -30,8 +30,11 @@ export const data = [
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     const channel = interaction.options.getChannel('channel', true);
-    // Allow server owner and admins to always create posts
-    const member = interaction.guild?.members.cache.get(interaction.user.id);
+    // Ensure member is fetched (not just from cache)
+    let member = interaction.guild?.members.cache.get(interaction.user.id);
+    if (!member && interaction.guild) {
+        member = await interaction.guild.members.fetch(interaction.user.id);
+    }
     let hasPerm = false;
     if (member) {
         const isOwner = member.guild.ownerId === member.id;
@@ -47,6 +50,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             interaction.user.id,
             'create'
         );
+    }
+    // Check if bot has permission to send messages in the target channel
+    const botMember = interaction.guild?.members.me;
+    let botCanSend = false;
+    // Only check permissions for text-based channels
+    if (
+        channel &&
+        ('permissionsFor' in channel) &&
+        (channel.type === 0 || channel.type === 5) // 0: GuildText, 5: GuildNews
+    ) {
+        botCanSend = channel.permissionsFor(botMember!)?.has(PermissionFlagsBits.SendMessages) ?? false;
+    } else {
+        botCanSend = true; // Assume true for unsupported types (e.g., threads, categories)
+    }
+    if (!botCanSend) {
+        await interaction.reply({
+            content: 'Bot does not have permission to send messages in the selected channel. Please update channel permissions.',
+            ephemeral: true
+        });
+        return;
     }
     if (!hasPerm) {
         await interaction.reply({
