@@ -4,18 +4,20 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
 
 ---
 
+
 ## Table of Contents
 - [Command Summary](#command-summary)
 - [Command Details](#command-details)
-  - [Create Note](#create-note)
-  - [Edit Note](#edit-note)
-  - [Delete Note](#delete-note)
-  - [List Notes](#list-notes)
-  - [Config](#config)
-  - [Config Grant](#config-grant)
+   - [Create Note](#create-note)
+   - [Edit Note](#edit-note)
+   - [Delete Note](#delete-note)
+   - [List Notes](#list-notes)
+   - [Config](#config)
+   - [Config Grant](#config-grant)
 - [Permissions](#permissions)
 - [Database & Data](#database--data)
 - [Setup & Running](#setup--running)
+- [Docker Setup](#docker-setup)
 - [Contributing](#contributing)
 
 ---
