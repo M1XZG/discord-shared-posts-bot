@@ -90,6 +90,7 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
 
 ---
 
+
 ## Setup & Running
 1. **Clone the repo:**
    ```sh
@@ -111,6 +112,22 @@ A collaborative Discord bot for managing shared notes in your server. Designed f
    npm run build
    npm start
    ```
+
+---
+
+## Docker Setup
+
+You can run this bot easily using Docker and Docker Compose. See [DOCKER.md](./DOCKER.md) for a complete guide!
+
+Basic steps:
+1. Copy `.env.example` to `.env` and fill in your credentials.
+2. Run:
+   ```sh
+   docker compose up --build
+   ```
+3. All persistent data will be stored in the `data/` folder.
+
+For full instructions and troubleshooting, see [DOCKER.md](./DOCKER.md).
 
 ---
 
