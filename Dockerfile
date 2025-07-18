@@ -3,9 +3,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files and install ALL dependencies (including dev)
 COPY package.json package-lock.json* ./
-RUN npm install --production
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -13,11 +13,10 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
-# Set environment to production
-ENV NODE_ENV=production
+# Remove dev dependencies for a smaller image
+RUN npm prune --production
 
-# Data volume for persistent storage
+ENV NODE_ENV=production
 VOLUME ["/app/data"]
 
-# Start the bot
 CMD ["node", "dist/index.js"]
