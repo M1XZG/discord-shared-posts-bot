@@ -53,21 +53,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     // Show modal for editing post
-    const modal = new ModalBuilder()
-        .setCustomId(`editpost-modal-${post.id}`)
-        .setTitle('Edit Shared Post');
-
-    const contentInput = new TextInputBuilder()
-        .setCustomId('editpost-content')
-        .setLabel('Content (supports markdown)')
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true)
-        .setValue(post.content);
-
-    modal.addComponents(
-        new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput)
-    );
-
+    const { buildPostModal } = await import('../utils/modalUtils');
+    const modal = buildPostModal({
+        customId: `editpost-modal-${post.id}`,
+        title: 'Edit Shared Post',
+        defaultTitle: post.title,
+        defaultContent: post.content,
+        defaultTags: post.tags ? post.tags.join(', ') : '',
+        isEdit: true
+    });
     await interaction.showModal(modal);
 }
 
@@ -80,7 +74,7 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
         return;
     }
     const postId = match[1];
-    const newContent = interaction.fields.getTextInputValue('editpost-content');
+    const newContent = interaction.fields.getTextInputValue('content');
 
     // Find the post
     const post = await Post.findOne({ 
