@@ -17,6 +17,16 @@ RUN npm run build
 RUN npm prune --production
 
 ENV NODE_ENV=production
+
+# Create a non-root user and group
+RUN addgroup -g 1001 appuser && adduser -D -u 1001 -G appuser appuser
+
+# Ensure /app/data exists and is owned by appuser
+RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
+
 VOLUME ["/app/data"]
+
+# Switch to non-root user
+USER appuser
 
 CMD ["node", "dist/index.js"]
