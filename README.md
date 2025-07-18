@@ -21,15 +21,16 @@ See below for details on each command and how permissions work.
 ## Table of Contents
 - [Command Summary](#command-summary)
 - [Command Details](#command-details)
-  - [Create Note](#create-note)
-  - [Edit Note](#edit-note)
-  - [Delete Note](#delete-note)
-  - [List Notes](#list-notes)
-  - [Config](#config)
-  - [Config Grant](#config-grant)
+   - [Create Note](#create-note)
+   - [Edit Note](#edit-note)
+   - [Delete Note](#delete-note)
+   - [List Notes](#list-notes)
+   - [Config](#config)
+   - [Config Grant](#config-grant)
 - [Permissions](#permissions)
 - [Database & Data](#database--data)
 - [Setup & Running](#setup--running)
+- [Docker Setup](#docker-setup)
 - [Contributing](#contributing)
 
 ---
@@ -105,6 +106,7 @@ See below for details on each command and how permissions work.
 
 ---
 
+
 ## Setup & Running
 1. **Clone the repo:**
    ```sh
@@ -126,6 +128,22 @@ See below for details on each command and how permissions work.
    npm run build
    npm start
    ```
+
+---
+
+## Docker Setup
+
+You can run this bot easily using Docker and Docker Compose. See [DOCKER.md](./DOCKER.md) for a complete guide!
+
+Basic steps:
+1. Copy `.env.example` to `.env` and fill in your credentials.
+2. Run:
+   ```sh
+   docker compose up --build
+   ```
+3. All persistent data will be stored in the `data/` folder.
+
+For full instructions and troubleshooting, see [DOCKER.md](./DOCKER.md).
 
 ---
 

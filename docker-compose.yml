@@ -1,0 +1,9 @@
+services:
+  discord-bot:
+    build: .
+    container_name: shared-notes-discord-bot
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
