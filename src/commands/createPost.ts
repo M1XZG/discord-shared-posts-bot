@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ModalSubmitInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ModalSubmitInteraction, PermissionFlagsBits } from 'discord.js';
 import { Post } from '../database/models/Post';
 import { canUserManagePosts } from '../utils/channelPermissions';
 import { buildPostModal } from '../utils/modalUtils';
@@ -35,7 +35,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     let hasPerm = false;
     if (member) {
         const isOwner = member.guild.ownerId === member.id;
-        const isAdmin = member.permissions.has('Administrator');
+        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
         if (isOwner || isAdmin) {
             hasPerm = true;
         }
@@ -78,7 +78,7 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
     let hasPerm = false;
     if (member) {
         const isOwner = member.guild.ownerId === member.id;
-        const isAdmin = member.permissions.has('Administrator');
+        const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
         if (isOwner || isAdmin) {
             hasPerm = true;
         }
