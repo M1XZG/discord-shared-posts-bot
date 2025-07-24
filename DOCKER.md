@@ -63,7 +63,7 @@ docker compose down
 ---
 
 ## 6. Troubleshooting
-- Check logs with `docker compose logs`.
+- Check logs with `![alt text](image.png)`.
 - Make sure your `.env` file is correct and present.
 - For advanced configuration, edit `docker-compose.yml`.
 
