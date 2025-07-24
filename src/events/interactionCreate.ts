@@ -71,7 +71,7 @@ export async function handleInteractionCreate(interaction: Interaction, commands
                 .setCustomId(`editpost-modal-${post.id}`)
                 .setTitle('Edit Shared Post');
             const contentInput = new TextInputBuilder()
-                .setCustomId('editpost-content')
+                .setCustomId('content')
                 .setLabel('Content (supports markdown)')
                 .setStyle(TextInputStyle.Paragraph)
                 .setRequired(true)

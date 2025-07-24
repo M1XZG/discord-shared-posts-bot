@@ -178,24 +178,11 @@ export async function handleCreatePostModal(interaction: ModalSubmitInteraction)
         }
         embed.setFooter({ text: footerText });
         const editButton = new ButtonBuilder()
-            .setCustomId(`editpost:${interaction.user.id}:${title}:${post.id}`)
+            .setCustomId(`editpost-btn-${post.id}`)
             .setLabel('Edit')
             .setStyle(ButtonStyle.Primary);
         const row = new ActionRowBuilder().addComponents(editButton);
         await sentMsg.edit({ embeds: [embed], components: [row] });
-        await interaction.reply({
-            content: `Post created successfully in <#${channel.id}>! ID: ${post.id}`,
-            ephemeral: true
-        });
-        // Add footer with post number and creation date/time
-        const createdAt = post.createdAt instanceof Date ? post.createdAt : new Date();
-        let footerText = `Post #${post.id} | ${createdAt.toLocaleString()}`;
-        if (tags.length > 0) {
-            footerText = `Tags: ${tags.join(', ')} | ${footerText}`;
-        }
-        embed.setFooter({ text: footerText });
-        // Edit the message to update the footer
-        await sentMsg.edit({ embeds: [embed] });
         await interaction.reply({
             content: `Post created successfully in <#${channel.id}>! ID: ${post.id}`,
             ephemeral: true
