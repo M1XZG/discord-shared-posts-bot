@@ -66,20 +66,17 @@ export async function handleInteractionCreate(interaction: Interaction, commands
                 await interaction.reply({ content: 'You do not have permission to edit this post.', ephemeral: true });
                 return;
             }
-            // Show the edit modal
-            const modal = new ModalBuilder()
-                .setCustomId(`editpost-modal-${post.id}`)
-                .setTitle('Edit Shared Post');
-            const contentInput = new TextInputBuilder()
-                .setCustomId('content')
-                .setLabel('Content (supports markdown)')
-                .setStyle(TextInputStyle.Paragraph)
-                .setRequired(true)
-                .setValue(post.content);
-            modal.addComponents(
-                new ActionRowBuilder<TextInputBuilder>().addComponents(contentInput)
-            );
-            await interaction.showModal(modal);
+                // Show the edit modal with title, content, and tags fields
+                const { buildPostModal } = await import('../utils/modalUtils');
+                const modal = buildPostModal({
+                    customId: `editpost-modal-${post.id}`,
+                    title: 'Edit Shared Post',
+                    defaultTitle: post.title,
+                    defaultContent: post.content,
+                    defaultTags: post.tags ? post.tags.join(', ') : '',
+                    isEdit: true
+                });
+                await interaction.showModal(modal);
         }
     } else if (interaction.isModalSubmit()) {
         // Handle create post modal (now supports customId with channelId)
