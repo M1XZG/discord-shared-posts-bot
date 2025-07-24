@@ -26,15 +26,6 @@ export const data = [
 ];
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    // Check permissions
-    if (!await canManagePosts(interaction.member as GuildMember)) {
-        await interaction.reply({ 
-            content: 'You do not have permission to manage shared posts.', 
-            ephemeral: true 
-        });
-        return;
-    }
-
     const postId = interaction.options.getString('id', true);
     // Find the post
     const post = await Post.findOne({ 
@@ -47,6 +38,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (!post) {
         await interaction.reply({ 
             content: 'Post not found.', 
+            ephemeral: true 
+        });
+        return;
+    }
+
+    // Check per-user, per-channel edit permission
+    const { canUserManagePosts } = await import('../utils/channelPermissions');
+    const hasPerm = await canUserManagePosts(
+        interaction.guildId!,
+        post.channelId,
+        interaction.user.id,
+        'edit'
+    );
+    if (!hasPerm) {
+        await interaction.reply({ 
+            content: 'You do not have permission to edit posts in this channel.', 
             ephemeral: true 
         });
         return;
