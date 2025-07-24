@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalSubmitInteraction, MessageFlags } from 'discord.js';
 import { Post } from '../database/models/Post';
 import { canManagePosts } from '../utils/permissions';
 
@@ -38,7 +38,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (!post) {
         await interaction.reply({ 
             content: 'Post not found.', 
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
         });
         return;
     }
@@ -54,7 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (!hasPerm) {
         await interaction.reply({ 
             content: 'You do not have permission to edit posts in this channel.', 
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
         });
         return;
     }
@@ -77,7 +77,7 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
     // Extract post ID from customId
     const match = interaction.customId.match(/^editpost-modal-(\d+)$/);
     if (!match) {
-        await interaction.reply({ content: 'Invalid modal submission.', ephemeral: true });
+        await interaction.reply({ content: 'Invalid modal submission.', flags: MessageFlags.Ephemeral });
         return;
     }
     const postId = match[1];
@@ -95,7 +95,7 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
     });
 
     if (!post) {
-        await interaction.reply({ content: 'Post not found.', ephemeral: true });
+        await interaction.reply({ content: 'Post not found.', flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -108,7 +108,7 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
         'edit'
     );
     if (!hasPerm) {
-        await interaction.reply({ content: 'You do not have permission to edit posts in this channel.', ephemeral: true });
+        await interaction.reply({ content: 'You do not have permission to edit posts in this channel.', flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -116,7 +116,7 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
         // Fetch the original channel and message
         const channel = await interaction.guild!.channels.fetch(post.channelId);
         if (!channel || !channel.isTextBased()) {
-            await interaction.reply({ content: 'Original channel not found.', ephemeral: true });
+            await interaction.reply({ content: 'Original channel not found.', flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -174,9 +174,9 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
         post.channelId = channel.id;
         await post.save();
 
-        await interaction.reply({ content: 'Post updated and reposted successfully.', ephemeral: true });
+    await interaction.reply({ content: 'Post updated and reposted successfully.', flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('Error editing post:', error);
-        await interaction.reply({ content: 'Failed to edit the post. The message may have been deleted.', ephemeral: true });
+    await interaction.reply({ content: 'Failed to edit the post. The message may have been deleted.', flags: MessageFlags.Ephemeral });
     }
 }
