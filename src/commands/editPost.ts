@@ -81,7 +81,10 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
         return;
     }
     const postId = match[1];
+    const newTitle = interaction.fields.getTextInputValue('title');
     const newContent = interaction.fields.getTextInputValue('content');
+    const newTagsString = interaction.fields.getTextInputValue('tags');
+    const newTags = newTagsString ? newTagsString.split(',').map(t => t.trim()).filter(Boolean) : [];
 
     // Find the post
     const post = await Post.findOne({ 
@@ -93,6 +96,19 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
 
     if (!post) {
         await interaction.reply({ content: 'Post not found.', ephemeral: true });
+        return;
+    }
+
+    // Permission check: per-user, per-channel
+    const { canUserManagePosts } = await import('../utils/channelPermissions');
+    const hasPerm = await canUserManagePosts(
+        interaction.guildId!,
+        post.channelId,
+        interaction.user.id,
+        'edit'
+    );
+    if (!hasPerm) {
+        await interaction.reply({ content: 'You do not have permission to edit posts in this channel.', ephemeral: true });
         return;
     }
 
@@ -111,10 +127,9 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
             oldMessage = null;
         }
 
-        // Build updated embed (preserve title, author, tags, post number)
-        const { title, tags } = post;
+        // Build updated embed (use new title and tags)
         const embed = {
-            title: title,
+            title: newTitle,
             description: newContent.length > 4096 ? newContent.substring(0, 4090) + '...' : newContent,
             color: 0x0099FF,
             author: {
@@ -129,8 +144,8 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
             embed.fields.push({ name: 'Note', value: 'Content was truncated. Full content is stored in the database.' });
         }
         let footerText = `Post #${post.id}`;
-        if (tags && tags.length > 0) {
-            footerText = `Tags: ${tags.join(', ')} | ${footerText}`;
+        if (newTags.length > 0) {
+            footerText = `Tags: ${newTags.join(', ')} | ${footerText}`;
         }
         embed.footer = { text: footerText };
 
@@ -148,10 +163,12 @@ export async function handleEditPostModal(interaction: ModalSubmitInteraction) {
         const row = new ActionRowBuilder().addComponents(editButton);
 
         // Send the new embed as a new message (repost)
-    const newMessage = await channel.send({ embeds: [embed], components: [row.toJSON()] });
+        const newMessage = await channel.send({ embeds: [embed], components: [row.toJSON()] });
 
-        // Update database with new message info
+        // Update database with new info
+        post.title = newTitle;
         post.content = newContent;
+        post.tags = newTags;
         post.lastEditedBy = interaction.user.id;
         post.messageId = newMessage.id;
         post.channelId = channel.id;
