@@ -43,15 +43,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
     }
 
-    // Check per-user, per-channel edit permission
+    // Check both global and per-channel edit permissions
     const { canUserManagePosts } = await import('../utils/channelPermissions');
-    const hasPerm = await canUserManagePosts(
+    const { canManagePosts } = await import('../utils/permissions');
+    const member = interaction.member as GuildMember;
+    const hasGlobalPerm = await canManagePosts(member);
+    const hasChannelPerm = await canUserManagePosts(
         interaction.guildId!,
         post.channelId,
         interaction.user.id,
         'edit'
     );
-    if (!hasPerm) {
+    if (!hasGlobalPerm && !hasChannelPerm) {
         await interaction.reply({ 
             content: 'You do not have permission to edit posts in this channel.', 
             flags: MessageFlags.Ephemeral 
