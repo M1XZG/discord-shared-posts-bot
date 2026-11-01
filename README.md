@@ -117,6 +117,7 @@ See below for details on each command and how permissions work.
    ```sh
    npm install
    ```
+   This needs Node.js 20.17 or newer. The prebuilt `sqlite3` binary for glibc Linux needs glibc 2.38 or newer (for example Ubuntu 24.04 or Debian 13). On older distributions such as Ubuntu 22.04 or Debian 12, build it from source instead with `npm rebuild sqlite3 --build-from-source` (requires `python3`, `make` and a C++ compiler). The Docker image is not affected.
 3. **Configure environment:**
    - Copy `.env.example` to `.env` and fill in your Discord bot token and IDs.
 4. **Run the bot (development):**
